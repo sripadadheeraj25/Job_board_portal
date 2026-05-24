@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Applications — {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0">Applications for {{ job.title }}</h2>
+        <p class="text-muted">{{ job.company }}</p>
+    </div>
+    <a href="{% url 'employer_dashboard' %}" class="btn btn-secondary">
+        ← Back to Dashboard
+    </a>
+</div>
+
+{% if applications %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Applicant</th>
+                    <th>Email</th>
+                    <th>Applied On</th>
+                    <th>Resume</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td class="fw-semibold">{{ app.applicant.username }}</td>
+                    <td>{{ app.applicant.email }}</td>
+                    <td>{{ app.applied_at|date:"d M Y" }}</td>
+                    <td>
+                        <a href="{{ app.resume.url }}"
+                           target="_blank"
+                           class="btn btn-sm btn-outline-primary">
+                            View Resume
+                        </a>
+                    </td>
+                    <td>
+                        {% if app.status == 'applied' %}
+                            <span class="badge bg-primary">Applied</span>
+                        {% elif app.status == 'shortlisted' %}
+                            <span class="badge bg-warning text-dark">Shortlisted</span>
+                        {% elif app.status == 'hired' %}
+                            <span class="badge bg-success">Hired</span>
+                        {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <h5 class="text-muted">No applications yet for this job.</h5>
+    </div>
+{% endif %}
+{% endblock %}

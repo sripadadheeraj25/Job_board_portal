@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h2 class="mb-0">{{ job.title }}</h2>
+                    <span class="badge bg-primary fs-6">
+                        {{ job.get_job_type_display }}
+                    </span>
+                </div>
+
+                <p class="text-muted fs-5">
+                    {{ job.company }} &bull; {{ job.location }}
+                </p>
+
+                {% if job.salary_min and job.salary_max %}
+                    <p class="text-success fw-semibold">
+                        ₹{{ job.salary_min }} – ₹{{ job.salary_max }} per year
+                    </p>
+                {% endif %}
+
+                {% if job.deadline %}
+                    <p class="text-danger">
+                        Apply before: {{ job.deadline }}
+                    </p>
+                {% endif %}
+
+                <hr>
+                <h5>Job Description</h5>
+                <p>{{ job.description|linebreaks }}</p>
+
+                {% if job.requirements %}
+                    <h5>Requirements</h5>
+                    <p>{{ job.requirements|linebreaks }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+
+                {% if user.is_authenticated %}
+                    {% if user.is_employer %}
+                        {% if job.employer == user %}
+                            <a href="{% url 'job_edit' job.pk %}"
+                               class="btn btn-warning w-100 mb-2">
+                                Edit Job
+                            </a>
+                            <a href="{% url 'job_applications' job.pk %}"
+                               class="btn btn-info w-100 mb-2">
+                                View Applications
+                            </a>
+                            <form method="POST" action="{% url 'job_delete' job.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger w-100"
+                                    onclick="return confirm('Delete this job?')">
+                                    Delete Job
+                                </button>
+                            </form>
+                        {% else %}
+                            <p class="text-muted">Posted by another employer.</p>
+                        {% endif %}
+                    {% else %}
+                        {% if already_applied %}
+                            <button class="btn btn-secondary w-100" disabled>
+                                Already Applied
+                            </button>
+                        {% else %}
+                            <a href="{% url 'apply_job' job.pk %}"
+                               class="btn btn-success w-100">
+                                Apply Now
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary w-100">
+                        Login to Apply
+                    </a>
+                {% endif %}
+
+                <hr>
+                <small class="text-muted">
+                    Posted {{ job.created_at|timesince }} ago
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
