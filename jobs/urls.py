@@ -14,4 +14,5 @@ urlpatterns = [
     path('application/<int:pk>/status/', views.update_application_status, name='update_status'),
     path('job/<int:pk>/save/',  views.toggle_save_job, name='toggle_save'),
     path('saved/',              views.saved_jobs,       name='saved_jobs'),
+    path('application/<int:pk>/withdraw/', views.withdraw_application, name='withdraw_application'),
 ]

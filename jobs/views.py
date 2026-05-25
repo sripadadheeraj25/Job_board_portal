@@ -247,3 +247,25 @@ def saved_jobs(request):
     ).select_related('job')
 
     return render(request, 'jobs/saved_jobs.html', {'saved_jobs': my_saved})
+
+@login_required
+def withdraw_application(request, pk):
+    app = get_object_or_404(
+        Application,
+        pk=pk,
+        applicant=request.user  # only the applicant can withdraw
+    )
+
+    # Only allow withdrawal if status is still 'applied'
+    # Can't withdraw if already shortlisted or hired
+    if app.status != 'applied':
+        messages.error(request,
+            f"Cannot withdraw — your application is already {app.get_status_display()}.")
+        return redirect('seeker_dashboard')
+
+    if request.method == 'POST':
+        app.delete()
+        messages.success(request, "Application withdrawn successfully.")
+        return redirect('seeker_dashboard')
+
+    return render(request, 'jobs/withdraw_confirm.html', {'app': app})
