@@ -5,48 +5,173 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Available Jobs</h2>
+    <h2>Available Jobs
+        <span class="text-muted fs-5">({{ jobs.count }} found)</span>
+    </h2>
     {% if user.is_authenticated and user.is_employer %}
-        <a href="{% url 'job_create' %}" class="btn btn-primary">
-            + Post a Job
-        </a>
+        <a href="{% url 'job_create' %}" class="btn btn-primary">+ Post a Job</a>
     {% endif %}
 </div>
 
+<!-- Search & Filter Form -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{% url 'job_list' %}">
+            <div class="row g-3">
+
+                <!-- Keyword search -->
+                <div class="col-md-4">
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ query }}"
+                        class="form-control"
+                        placeholder="Search jobs, companies...">
+                </div>
+
+                <!-- Location filter -->
+                <div class="col-md-3">
+                    <input
+                        type="text"
+                        name="location"
+                        value="{{ location }}"
+                        class="form-control"
+                        placeholder="Location...">
+                </div>
+
+                <!-- Job type filter -->
+                <div class="col-md-3">
+                    <select name="job_type" class="form-select">
+                        <option value="">All Job Types</option>
+                        {% for value, label in job_type_choices %}
+                            <option value="{{ value }}"
+                                {% if job_type == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        Search
+                    </button>
+                    <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">
+                        ✕
+                    </a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Active filters display -->
+{% if query or job_type or location %}
+    <div class="mb-3">
+        <small class="text-muted">Showing results for:
+            {% if query %}
+                <span class="badge bg-secondary">{{ query }}</span>
+            {% endif %}
+            {% if location %}
+                <span class="badge bg-secondary">{{ location }}</span>
+            {% endif %}
+            {% if job_type %}
+                <span class="badge bg-secondary">{{ job_type }}</span>
+            {% endif %}
+        </small>
+    </div>
+{% endif %}
+
+<!-- Job listings -->
 {% if jobs %}
     {% for job in jobs %}
         <div class="card mb-3 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h5 class="card-title mb-1">{{ job.title }}</h5>
-                    <span class="badge bg-primary">{{ job.get_job_type_display }}</span>
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            <a href="{% url 'job_detail' job.pk %}"
+                               class="text-decoration-none text-dark">
+                                {{ job.title }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-1">
+                            {{ job.company }} &bull; {{ job.location }}
+                        </p>
+                        {% if job.salary_min and job.salary_max %}
+                            <p class="text-success mb-1 small fw-semibold">
+                                ₹{{ job.salary_min }} – ₹{{ job.salary_max }}
+                            </p>
+                        {% endif %}
+                        <p class="text-secondary small mb-2">
+                            {{ job.description|truncatewords:20 }}
+                        </p>
+                    </div>
+                    <div class="text-end ms-3 flex-shrink-0">
+                        <span class="badge bg-primary mb-2 d-block">
+                            {{ job.get_job_type_display }}
+                        </span>
+                        <small class="text-muted d-block mb-2">
+                            {{ job.created_at|timesince }} ago
+                        </small>
+                        <a href="{% url 'job_detail' job.pk %}"
+                           class="btn btn-outline-primary btn-sm">
+                            View Details
+                        </a>
+                    </div>
                 </div>
-                <p class="text-muted mb-1">
-                    {{ job.company }} &bull; {{ job.location }}
-                </p>
-                {% if job.salary_min and job.salary_max %}
-                    <p class="text-success mb-2">
-                        ₹{{ job.salary_min }} – ₹{{ job.salary_max }}
-                    </p>
-                {% endif %}
-                <p class="card-text text-secondary">
-                    {{ job.description|truncatewords:20 }}
-                </p>
-                <a href="{% url 'job_detail' job.pk %}" class="btn btn-outline-primary btn-sm">
-                    View Details
-                </a>
             </div>
         </div>
     {% endfor %}
+
 {% else %}
     <div class="text-center py-5">
-        <h5 class="text-muted">No jobs posted yet.</h5>
-        {% if user.is_authenticated and user.is_employer %}
-            <a href="{% url 'job_create' %}" class="btn btn-primary mt-2">
-                Post the first job
+        <i class="fs-1">🔍</i>
+        <h5 class="text-muted mt-3">No jobs found.</h5>
+        {% if query or job_type or location %}
+            <p class="text-muted">Try different search terms.</p>
+            <a href="{% url 'job_list' %}" class="btn btn-outline-primary mt-2">
+                Clear Filters
             </a>
         {% endif %}
     </div>
+{% endif %}
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ page_obj.previous_page_number }}&q={{ query }}&job_type={{ job_type }}&location={{ location }}">
+                        ← Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link"
+                       href="?page={{ num }}&q={{ query }}&job_type={{ job_type }}&location={{ location }}">
+                        {{ num }}
+                    </a>
+                </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ page_obj.next_page_number }}&q={{ query }}&job_type={{ job_type }}&location={{ location }}">
+                        Next →
+                    </a>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
 {% endif %}
 
 {% endblock %}

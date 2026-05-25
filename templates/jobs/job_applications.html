@@ -38,17 +38,30 @@
                             View Resume
                         </a>
                     </td>
-                    <td>
-                        {% if app.status == 'applied' %}
-                            <span class="badge bg-primary">Applied</span>
-                        {% elif app.status == 'shortlisted' %}
-                            <span class="badge bg-warning text-dark">Shortlisted</span>
-                        {% elif app.status == 'hired' %}
-                            <span class="badge bg-success">Hired</span>
-                        {% else %}
-                            <span class="badge bg-danger">Rejected</span>
-                        {% endif %}
-                    </td>
+                   <td>
+    <form method="POST" action="{% url 'update_status' app.pk %}">
+        {% csrf_token %}
+        <select name="status" class="form-select form-select-sm"
+                onchange="this.form.submit()" style="width:130px">
+            <option value="applied"
+                {% if app.status == 'applied' %}selected{% endif %}>
+                Applied
+            </option>
+            <option value="shortlisted"
+                {% if app.status == 'shortlisted' %}selected{% endif %}>
+                Shortlisted
+            </option>
+            <option value="hired"
+                {% if app.status == 'hired' %}selected{% endif %}>
+                Hired
+            </option>
+            <option value="rejected"
+                {% if app.status == 'rejected' %}selected{% endif %}>
+                Rejected
+            </option>
+        </select>
+    </form>
+</td>
                 </tr>
                 {% endfor %}
             </tbody>

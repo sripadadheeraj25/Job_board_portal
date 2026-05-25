@@ -140,3 +140,8 @@ LOGIN_URL = '/accounts/login/'
 
 # Makes Django form widgets use Bootstrap's input class automatically
 FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
+
+# Email settings — using console backend for development
+# This prints emails to terminal instead of actually sending them
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'jobboard@example.com'

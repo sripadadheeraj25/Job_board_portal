@@ -47,6 +47,7 @@
             <div class="card-body p-4">
 
                 {% if user.is_authenticated %}
+
                     {% if user.is_employer %}
                         {% if job.employer == user %}
                             <a href="{% url 'job_edit' job.pk %}"
@@ -67,18 +68,34 @@
                         {% else %}
                             <p class="text-muted">Posted by another employer.</p>
                         {% endif %}
+
                     {% else %}
                         {% if already_applied %}
-                            <button class="btn btn-secondary w-100" disabled>
+                            <button class="btn btn-secondary w-100 mb-2" disabled>
                                 Already Applied
                             </button>
                         {% else %}
                             <a href="{% url 'apply_job' job.pk %}"
-                               class="btn btn-success w-100">
+                               class="btn btn-success w-100 mb-2">
                                 Apply Now
                             </a>
                         {% endif %}
+
+                        <form method="POST" action="{% url 'toggle_save' job.pk %}">
+                            {% csrf_token %}
+                            {% if is_saved %}
+                                <button type="submit" class="btn btn-outline-warning w-100">
+                                    ★ Unsave Job
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-outline-secondary w-100">
+                                    ☆ Save Job
+                                </button>
+                            {% endif %}
+                        </form>
+
                     {% endif %}
+
                 {% else %}
                     <a href="{% url 'login' %}" class="btn btn-primary w-100">
                         Login to Apply
@@ -89,6 +106,7 @@
                 <small class="text-muted">
                     Posted {{ job.created_at|timesince }} ago
                 </small>
+
             </div>
         </div>
     </div>

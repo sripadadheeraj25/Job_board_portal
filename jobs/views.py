@@ -1,29 +1,67 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Job, Application
+from django.core.paginator import Paginator
+from .models import Job, Application, SavedJob
 from .forms import JobForm, ApplicationForm
 
 
 def job_list(request):
     jobs = Job.objects.filter(is_active=True)
-    return render(request, 'jobs/job_list.html', {'jobs': jobs})
 
+    # Search by keyword
+    query = request.GET.get('q', '')
+    if query:
+        from django.db.models import Q
+        jobs = jobs.filter(
+            Q(title__icontains=query) |
+            Q(company__icontains=query) |
+            Q(location__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    # Filter by job type
+    job_type = request.GET.get('job_type', '')
+    if job_type:
+        jobs = jobs.filter(job_type=job_type)
+
+    # Filter by location
+    location = request.GET.get('location', '')
+    if location:
+        jobs = jobs.filter(location__icontains=location)
+
+    # Pagination — 5 jobs per page
+    paginator = Paginator(jobs, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'jobs/job_list.html', {
+        'jobs': page_obj,           # ← now page_obj instead of jobs
+        'page_obj': page_obj,
+        'query': query,
+        'job_type': job_type,
+        'location': location,
+        'job_type_choices': Job.JOB_TYPE_CHOICES,
+    })
 
 def job_detail(request, pk):
     job = get_object_or_404(Job, pk=pk, is_active=True)
 
-    # Check if seeker already applied — to show correct button
     already_applied = False
-    if request.user.is_authenticated and hasattr(request.user, 'is_seeker'):
-        if request.user.is_seeker():
-            already_applied = Application.objects.filter(
-                job=job, applicant=request.user
-            ).exists()
+    is_saved = False
+
+    if request.user.is_authenticated and request.user.is_seeker():
+        already_applied = Application.objects.filter(
+            job=job, applicant=request.user
+        ).exists()
+        is_saved = SavedJob.objects.filter(
+            user=request.user, job=job
+        ).exists()
 
     return render(request, 'jobs/job_detail.html', {
         'job': job,
         'already_applied': already_applied,
+        'is_saved': is_saved,
     })
 
 
@@ -87,12 +125,10 @@ def job_delete(request, pk):
 def apply_job(request, pk):
     job = get_object_or_404(Job, pk=pk, is_active=True)
 
-    # Guard 1 — employers cannot apply
     if request.user.is_employer():
         messages.error(request, "Employers cannot apply to jobs.")
         return redirect('job_detail', pk=pk)
 
-    # Guard 2 — already applied
     if Application.objects.filter(job=job, applicant=request.user).exists():
         messages.warning(request, "You have already applied to this job.")
         return redirect('job_detail', pk=pk)
@@ -104,15 +140,28 @@ def apply_job(request, pk):
             app.job       = job
             app.applicant = request.user
             app.save()
+
+            # Send email notification to employer
+            from django.core.mail import send_mail
+            send_mail(
+                subject=f'New application for {job.title}',
+                message=(
+                    f'Hi {job.employer.username},\n\n'
+                    f'{request.user.username} has applied for your job: {job.title}.\n\n'
+                    f'Login to your dashboard to view the application.\n\n'
+                    f'Job Board Team'
+                ),
+                from_email=None,   # uses DEFAULT_FROM_EMAIL
+                recipient_list=[job.employer.email],
+                fail_silently=True,  # don't crash if email fails
+            )
+
             messages.success(request, "Application submitted! Good luck!")
             return redirect('seeker_dashboard')
     else:
         form = ApplicationForm()
 
-    return render(request, 'jobs/apply.html', {
-        'form': form,
-        'job': job,
-    })
+    return render(request, 'jobs/apply.html', {'form': form, 'job': job})
 
 
 @login_required
@@ -154,3 +203,47 @@ def job_applications(request, pk):
         'job': job,
         'applications': applications,
     })
+
+@login_required
+def update_application_status(request, pk):
+    from django.http import JsonResponse
+    app = get_object_or_404(Application, pk=pk, job__employer=request.user)
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        valid = [s[0] for s in Application.STATUS_CHOICES]
+        if new_status in valid:
+            app.status = new_status
+            app.save()
+            messages.success(request, f"Status updated to {app.get_status_display()}")
+    return redirect('job_applications', pk=app.job.pk)
+
+@login_required
+def toggle_save_job(request, pk):
+    job = get_object_or_404(Job, pk=pk)
+
+    if request.user.is_employer():
+        messages.error(request, "Employers cannot save jobs.")
+        return redirect('job_detail', pk=pk)
+
+    saved = SavedJob.objects.filter(user=request.user, job=job).first()
+    if saved:
+        saved.delete()
+        messages.info(request, "Job removed from saved list.")
+    else:
+        SavedJob.objects.create(user=request.user, job=job)
+        messages.success(request, "Job saved!")
+
+    return redirect('job_detail', pk=pk)
+
+
+@login_required
+def saved_jobs(request):
+    if not request.user.is_seeker():
+        return redirect('employer_dashboard')
+
+    my_saved = SavedJob.objects.filter(
+        user=request.user
+    ).select_related('job')
+
+    return render(request, 'jobs/saved_jobs.html', {'saved_jobs': my_saved})

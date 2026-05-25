@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Saved Jobs{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Saved Jobs</h2>
+
+{% if saved_jobs %}
+    {% for saved in saved_jobs %}
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="mb-1">
+                            <a href="{% url 'job_detail' saved.job.pk %}"
+                               class="text-decoration-none">
+                                {{ saved.job.title }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-0">
+                            {{ saved.job.company }} &bull; {{ saved.job.location }}
+                        </p>
+                    </div>
+                    <span class="badge bg-primary align-self-start">
+                        {{ saved.job.get_job_type_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5">
+        <h5 class="text-muted">No saved jobs yet.</h5>
+        <a href="{% url 'job_list' %}" class="btn btn-primary mt-2">
+            Browse Jobs
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
