@@ -16,7 +16,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.forms',
-    'storages',
+    'cloudinary_storage',
+    'cloudinary',
     'accounts',
     'jobs',
 ]
@@ -35,7 +36,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'Job_board.urls'
-
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 TEMPLATES = [
@@ -103,22 +103,13 @@ CSRF_TRUSTED_ORIGINS = config(
     default='http://localhost'
 ).split(',')
 
-# Media files
-if DEBUG:
-    # Local development — store files locally
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = BASE_DIR / 'media'
-else:
-# Media files — always use Supabase
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_ACCESS_KEY_ID     = config('SUPABASE_S3_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = config('SUPABASE_S3_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = 'media'
-    AWS_S3_ENDPOINT_URL   = config('SUPABASE_S3_ENDPOINT')
-    AWS_S3_REGION_NAME    = config('SUPABASE_REGION')
-    AWS_DEFAULT_ACL       = 'public-read'
-    AWS_QUERYSTRING_AUTH  = False
-    AWS_S3_FILE_OVERWRITE = False
-    MEDIA_URL = f"https://{config('SUPABASE_PROJECT_ID')}.supabase.co/storage/v1/object/public/media/"
+# Cloudinary for file storage
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY':    config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
