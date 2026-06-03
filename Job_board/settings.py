@@ -38,8 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.forms',
+    'storages', 
     'accounts',
     'jobs',
+
 ]
 
 FORM_RENDERER = 'django.forms.renderers.DjangoTemplates'
@@ -153,3 +155,16 @@ CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
     default='http://localhost'
 ).split(',')
+
+# Supabase Storage for media files
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_ACCESS_KEY_ID = config('SUPABASE_KEY')
+    AWS_SECRET_ACCESS_KEY = config('SUPABASE_KEY')
+    AWS_STORAGE_BUCKET_NAME = 'media'
+    AWS_S3_ENDPOINT_URL = config('SUPABASE_URL') + '/storage/v1/s3'
+    AWS_S3_REGION_NAME = config('SUPABASE_REGION')
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
+    MEDIA_URL = config('SUPABASE_URL') + '/storage/v1/object/public/media/'
