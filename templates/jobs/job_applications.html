@@ -32,9 +32,9 @@
                     <td>{{ app.applicant.email }}</td>
                     <td>{{ app.applied_at|date:"d M Y" }}</td>
                     <td>
-                        <a href="{{ app.resume.url }}"
-                           target="_blank"
-                           class="btn btn-sm btn-outline-primary">
+                        <a href="{{ app.resume.url }}?fl_attachment=true"
+                            target="_blank"
+                            class="btn btn-sm btn-outline-primary">
                             View Resume
                         </a>
                     </td>

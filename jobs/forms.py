@@ -38,9 +38,13 @@ class ApplicationForm(forms.ModelForm):
         model  = Application
         fields = ['resume', 'cover_letter']
         widgets = {
-            'resume':       forms.FileInput(attrs={'class': 'form-control'}),
             'cover_letter': forms.Textarea(attrs={
-                                'class': 'form-control', 'rows': 4,
-                                'placeholder': 'Why are you a good fit for this role?'
-                            }),
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Why are you a good fit?'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['resume'].widget.attrs['class'] = 'form-control'
