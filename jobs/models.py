@@ -76,7 +76,16 @@ class Application(models.Model):
 
     def get_resume_url(self):
         if self.resume:
-            return f"https://res.cloudinary.com/dygwzf0gl/raw/upload/{self.resume.public_id}"
+            try:
+                # Get public_id from CloudinaryField
+                public_id = self.resume.public_id
+                # Ensure .pdf extension
+                if not public_id.endswith('.pdf'):
+                    public_id = public_id + '.pdf'
+                # Return direct Cloudinary URL
+                return f"https://res.cloudinary.com/dygwzf0gl/raw/upload/{public_id}"
+            except Exception:
+                return None
         return None
 
     def __str__(self):

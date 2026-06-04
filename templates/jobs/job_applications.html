@@ -32,14 +32,23 @@
                     <td>{{ app.applicant.email }}</td>
                     <td>{{ app.applied_at|date:"d M Y" }}</td>
                     <td>
-                        {% if app.get_resume_url %}
-                    <a href="{{ app.get_resume_url }}"
-                        target="_blank"
-                        class="btn btn-sm btn-outline-primary">
-                        View Resume
-                    </a>
-                    {% endif %}
-                    </td>
+    {% if app.get_resume_url %}
+        <!-- Open in Google Docs viewer — works for all PDFs -->
+        <a href="https://docs.google.com/viewer?url={{ app.get_resume_url }}&embedded=true"
+           target="_blank"
+           class="btn btn-sm btn-outline-primary">
+            View Resume
+        </a>
+        <!-- Also provide direct download as backup -->
+        <a href="{{ app.get_resume_url }}"
+           download
+           class="btn btn-sm btn-outline-secondary ms-1">
+            Download
+        </a>
+    {% else %}
+        <span class="text-muted small">No resume</span>
+    {% endif %}
+</td>
                    <td>
     <form method="POST" action="{% url 'update_status' app.pk %}">
         {% csrf_token %}
