@@ -40,7 +40,6 @@ class Job(models.Model):
     def __str__(self):
         return f"{self.title} at {self.company}"
 
-
 class Application(models.Model):
     STATUS_CHOICES = (
         ('applied',     'Applied'),
@@ -59,10 +58,10 @@ class Application(models.Model):
                        on_delete=models.CASCADE,
                        related_name='applications'
                    )
-    resume      = CloudinaryField(
-                    resource_type="raw",
-                    folder="resumes"
-                )
+    resume       = CloudinaryField(
+                       resource_type="raw",
+                       folder="resumes"
+                   )
     cover_letter = models.TextField(blank=True)
     status       = models.CharField(
                        max_length=20,
@@ -74,6 +73,11 @@ class Application(models.Model):
     class Meta:
         unique_together = ('job', 'applicant')
         ordering = ['-applied_at']
+
+    def get_resume_url(self):
+        if self.resume:
+            return f"https://res.cloudinary.com/dygwzf0gl/raw/upload/{self.resume}"
+        return None
 
     def __str__(self):
         return f"{self.applicant.username} → {self.job.title}"

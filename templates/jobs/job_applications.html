@@ -32,11 +32,13 @@
                     <td>{{ app.applicant.email }}</td>
                     <td>{{ app.applied_at|date:"d M Y" }}</td>
                     <td>
-                        <a href="{{ app.resume.url }}?fl_attachment=true"
-                            target="_blank"
-                            class="btn btn-sm btn-outline-primary">
-                            View Resume
-                        </a>
+                        {% if app.get_resume_url %}
+                    <a href="{{ app.get_resume_url }}"
+                        target="_blank"
+                        class="btn btn-sm btn-outline-primary">
+                        View Resume
+                    </a>
+{% endif %}
                     </td>
                    <td>
     <form method="POST" action="{% url 'update_status' app.pk %}">
