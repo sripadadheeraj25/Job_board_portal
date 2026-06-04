@@ -77,10 +77,3 @@ python manage.py runserver
 ```
 
 Visit `http://127.0.0.1:8000` in your browser.
-
-## Author
-
-Dheeraj — Python Full Stack Developer
-
-- GitHub: https://github.com/sripadadheeraj25
-- LinkedIn: your-linkedin-url
