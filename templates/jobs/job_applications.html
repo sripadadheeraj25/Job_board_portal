@@ -31,12 +31,12 @@
                     <td class="fw-semibold">{{ app.applicant.username }}</td>
                     <td>{{ app.applicant.email }}</td>
                     <td>{{ app.applied_at|date:"d M Y" }}</td>
-                   <td>
-                        <a href="{{ app.resume }}"
-                            target="_blank"
-                            class="btn btn-sm btn-outline-primary">
-                             View Resume
-                         </a>
+                    <td>
+                        <a href="{{ app.resume.url }}"
+                           target="_blank"
+                           class="btn btn-sm btn-outline-primary">
+                            View Resume
+                        </a>
                     </td>
                    <td>
     <form method="POST" action="{% url 'update_status' app.pk %}">
