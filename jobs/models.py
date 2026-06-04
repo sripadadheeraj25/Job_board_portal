@@ -76,7 +76,7 @@ class Application(models.Model):
 
     def get_resume_url(self):
         if self.resume:
-            return f"https://res.cloudinary.com/dygwzf0gl/raw/upload/{self.resume}"
+            return f"https://res.cloudinary.com/dygwzf0gl/raw/upload/{self.resume.public_id}"
         return None
 
     def __str__(self):
